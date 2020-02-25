@@ -38,10 +38,23 @@ const writeCounter = (count, callback) => {
 
 // Public API - Fix this function //////////////////////////////////////////////
 
-exports.getNextUniqueId = () => {
-  counter = counter + 1;
-  return zeroPaddedNumber(counter);
+exports.getNextUniqueId = (callback) => {
+//this function is going to get it's return value from the callback here
+
+  //this follows an asynchornous flow:
+  //read the counter, assign a new value to the counter, write the counter.
+  //all through callbacks. NO RETURN STATEMENTS. 
+  //This flows back into the statement where the function was invoked [counter.getNextUniqueId in index.js]
+  return readCounter((err, oldCounter) => {
+    var newCounter = oldCounter + 1;
+
+    writeCounter(newCounter, (err, zeroPaddedCounter) => {
+      callback(err, zeroPaddedCounter);
+    });
+  });
+
 };
+
 
 
 
