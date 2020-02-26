@@ -3,28 +3,46 @@ const path = require('path');
 const _ = require('underscore');
 const counter = require('./counter');
 
-var items = {};
+var items = {}; // this no longer necessary in refactor to async & persistant data
 
 // Public API - Fix these CRUD functions ///////////////////////////////////////
 
+//ABSOLUTELY NEED standardized error-first callbacks. Pay close attention to this to avoid
+//wasting time debugging.
+
 exports.create = (text, callback) => {
   // var id = counter.getNextUniqueId();
-  counter.getNextUniqueId((id) => {
+  counter.getNextUniqueId((err, id) => {
   //this function transforms into a callback itself because the returned value for
   //getNextUniqueId is from a callback.
-    var filePath = `${exports.dataDir}/${id}.txt`; //nice format for filePath
+    var filePath = path.join(exports.dataDir, `${id}.txt`); //nice format for filePath
     fs.writeFile(filePath, text, (err) => {
+      if (err) {
+        callback(err);
+      }
       callback(null, { id, text });
     });
   });
-  
+
 };
 
 exports.readAll = (callback) => {
-  var data = _.map(items, (text, id) => {
-    return { id, text };
+
+  fs.readdir(exports.dataDir, (err, files) => {
+    if (err) {
+      callback(err);
+    }
+
+    var data = _.map(files, (file) => {
+      var id = path.basename(file, '.txt');
+      return {
+        id: id,
+        text: id
+      };
+    });
+
+    callback(null, data);
   });
-  callback(null, data);
 };
 
 exports.readOne = (id, callback) => {
